@@ -1,0 +1,54 @@
+version: '3'
+services:
+  postgres:
+    image: postgres:latest
+    environment:
+      - POSTGRES_USER: ${DB_USERNAME}
+      - POSTGRES_PASSWORD: ${DB_PASSWORD}
+      - POSTGRES_DB: ${DB_NAME}
+    volumes:
+      - db_data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+
+  dns:
+    build: ./dns-server
+    ports:
+      - "53:53/udp"
+      - "53:53/tcp"
+
+  nwc-http:
+    image: ghcr.io/a-blondel/nwc-server/nwc-server:latest
+    command: start-http
+    ports:
+      - 80:80
+    volumes:
+      - /etc/ssl/certs:/app/certs
+
+  nwc-https:
+    image: ghcr.io/a-blondel/nwc-server/nwc-server:latest
+    command: start-https
+    ports:
+      - 443:443
+    volumes:
+      - /etc/ssl/certs:/app/certs
+
+  mohh2-wii-pal:
+    image: ghcr.io/a-blondel/mohh2-server/mohh2-server:latest
+    environment:
+      - DB_URL
+      - DB_USERNAME
+      - DB_PASSWORD
+      - HOST_IP
+      - SPRING_PROFILES_ACTIVE: ${WII_PAL_PROFILES}
+      - LOGS: ${WII_PAL_LOGS}
+    volumes:
+      - app_logs: ${WII_PAL_LOGS}
+    ports:
+      - "21171:21171"
+      - "21172:21172"
+      - "21173:21173"
+
+volumes:
+  db_data:
+  app_logs:
