@@ -3,9 +3,9 @@ services:
   postgres:
     image: postgres:latest
     environment:
-      - POSTGRES_USER: ${DB_USERNAME}
-      - POSTGRES_PASSWORD: ${DB_PASSWORD}
-      - POSTGRES_DB: ${DB_NAME}
+      - POSTGRES_USER=${DB_USERNAME}
+      - POSTGRES_PASSWORD=${DB_PASSWORD}
+      - POSTGRES_DB=${DB_NAME}
     volumes:
       - db_data:/var/lib/postgresql/data
     ports:
@@ -36,14 +36,15 @@ services:
   mohh2-wii-pal:
     image: ghcr.io/a-blondel/mohh2-server/mohh2-server:latest
     environment:
-      - DB_URL
+      - DB_URL=jdbc:postgresql://postgres:5432/${DB_NAME}
       - DB_USERNAME
       - DB_PASSWORD
-      - HOST_IP
-      - SPRING_PROFILES_ACTIVE: ${WII_PAL_PROFILES}
-      - LOGS: ${WII_PAL_LOGS}
+      - TCP_HOST_IP
+      - UDP_HOST_IP
+      - SPRING_PROFILES_ACTIVE=${WII_PAL_PROFILES}
+      - LOGS=${WII_PAL_LOGS}
     volumes:
-      - app_logs: ${WII_PAL_LOGS}
+      - app_logs:${WII_PAL_LOGS}
     ports:
       - "21171:21171"
       - "21172:21172"
