@@ -1,54 +1,161 @@
-version: '3'
 services:
-  postgres:
+  postgres-wii-pal:
     image: postgres:latest
+    restart: unless-stopped
     environment:
       - POSTGRES_USER=${DB_USERNAME}
       - POSTGRES_PASSWORD=${DB_PASSWORD}
       - POSTGRES_DB=${DB_NAME}
+      - PGDATA=/var/lib/postgresql/data/wii-pal
     volumes:
       - db_data:/var/lib/postgresql/data
     ports:
-      - "5432:5432"
+      - "${WII_PAL_DB_PORT}:5432"
+
+  postgres-wii-ntsc:
+    image: postgres:latest
+    restart: unless-stopped
+    environment:
+      - POSTGRES_USER=${DB_USERNAME}
+      - POSTGRES_PASSWORD=${DB_PASSWORD}
+      - POSTGRES_DB=${DB_NAME}
+      - PGDATA=/var/lib/postgresql/data/wii-ntsc
+    volumes:
+      - db_data:/var/lib/postgresql/data
+    ports:
+      - "${WII_NTSC_DB_PORT}:5432"
+
+  postgres-psp-pal:
+    image: postgres:latest
+    restart: unless-stopped
+    environment:
+      - POSTGRES_USER=${DB_USERNAME}
+      - POSTGRES_PASSWORD=${DB_PASSWORD}
+      - POSTGRES_DB=${DB_NAME}
+      - PGDATA=/var/lib/postgresql/data/psp-pal
+    volumes:
+      - db_data:/var/lib/postgresql/data
+    ports:
+      - "${PSP_PAL_DB_PORT}:5432"
+
+  postgres-psp-ntsc:
+    image: postgres:latest
+    restart: unless-stopped
+    environment:
+      - POSTGRES_USER=${DB_USERNAME}
+      - POSTGRES_PASSWORD=${DB_PASSWORD}
+      - POSTGRES_DB=${DB_NAME}
+      - PGDATA=/var/lib/postgresql/data/psp-ntsc
+    volumes:
+      - db_data:/var/lib/postgresql/data
+    ports:
+      - "${PSP_NTSC_DB_PORT}:5432"
 
   dns:
     build: ./dns-server
+    restart: unless-stopped
     ports:
       - "53:53/udp"
       - "53:53/tcp"
 
-  nwc-http:
-    image: ghcr.io/a-blondel/nwc-server/nwc-server:latest
+  ea-tos-nwc-bundle-http:
+    build: ./ea-tos-server
+    image: ea-tos-nwc-bundle-server
+    restart: unless-stopped
     command: start-http
-    ports:
-      - 80:80
     volumes:
-      - /etc/ssl/certs:/app/certs
+      - /var/www/certs:/app/certs
+    ports:
+      - "80:80"
 
-  nwc-https:
-    image: ghcr.io/a-blondel/nwc-server/nwc-server:latest
+  ea-tos-nwc-bundle-https:
+    image: ea-tos-nwc-bundle-server
+    restart: unless-stopped
     command: start-https
-    ports:
-      - 443:443
     volumes:
-      - /etc/ssl/certs:/app/certs
+      - /var/www/certs:/app/certs
+    ports:
+      - "443:443"
 
   mohh2-wii-pal:
     image: ghcr.io/a-blondel/mohh2-server/mohh2-server:latest
+    restart: unless-stopped
     environment:
-      - DB_URL=jdbc:postgresql://postgres:5432/${DB_NAME}
+      - DB_URL=jdbc:postgresql://postgres-wii-pal:5432/${DB_NAME}
       - DB_USERNAME
       - DB_PASSWORD
       - TCP_HOST_IP
       - UDP_HOST_IP
-      - SPRING_PROFILES_ACTIVE=${WII_PAL_PROFILES}
-      - LOGS=${WII_PAL_LOGS}
+      - UDP_ENABLED=false
+      - TOS_ENABLED=false
+      - SPRING_PROFILES_ACTIVE=wii-pal
+      - LOGS=/var/log/mohh2/wii-pal
     volumes:
-      - app_logs:${WII_PAL_LOGS}
+      - app_logs:/var/log/mohh2
     ports:
       - "21171:21171"
       - "21172:21172"
       - "21173:21173"
+
+  mohh2-wii-ntsc:
+    image: ghcr.io/a-blondel/mohh2-server/mohh2-server:latest
+    restart: unless-stopped
+    environment:
+      - DB_URL=jdbc:postgresql://postgres-wii-ntsc:5432/${DB_NAME}
+      - DB_USERNAME
+      - DB_PASSWORD
+      - TCP_HOST_IP
+      - UDP_HOST_IP
+      - UDP_ENABLED=false
+      - TOS_ENABLED=false
+      - SPRING_PROFILES_ACTIVE=wii-ntsc
+      - LOGS=/var/log/mohh2/wii-ntsc
+    volumes:
+      - app_logs:/var/log/mohh2
+    ports:
+      - "21121:21121"
+      - "21122:21122"
+      - "21123:21123"
+
+  mohh2-psp-pal:
+    image: ghcr.io/a-blondel/mohh2-server/mohh2-server:latest
+    restart: unless-stopped
+    environment:
+      - DB_URL=jdbc:postgresql://postgres-psp-pal:5432/${DB_NAME}
+      - DB_USERNAME
+      - DB_PASSWORD
+      - TCP_HOST_IP
+      - UDP_HOST_IP
+      - UDP_ENABLED=false
+      - TOS_ENABLED=false
+      - SPRING_PROFILES_ACTIVE=psp-pal
+      - LOGS=/var/log/mohh2/psp-pal
+    volumes:
+      - app_logs:/var/log/mohh2
+    ports:
+      - "21181:21181"
+      - "21182:21182"
+      - "21183:21183"
+
+  mohh2-psp-ntsc:
+    image: ghcr.io/a-blondel/mohh2-server/mohh2-server:latest
+    restart: unless-stopped
+    environment:
+      - DB_URL=jdbc:postgresql://postgres-psp-ntsc:5432/${DB_NAME}
+      - DB_USERNAME
+      - DB_PASSWORD
+      - TCP_HOST_IP
+      - UDP_HOST_IP
+      - UDP_ENABLED=false
+      - TOS_ENABLED=false
+      - SPRING_PROFILES_ACTIVE=psp-ntsc
+      - LOGS=/var/log/mohh2/psp-ntsc
+    volumes:
+      - app_logs:/var/log/mohh2
+    ports:
+      - "21191:21191"
+      - "21192:21192"
+      - "21193:21193"
 
 volumes:
   db_data:

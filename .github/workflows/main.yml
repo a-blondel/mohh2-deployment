@@ -19,16 +19,19 @@ jobs:
         echo DB_USERNAME=${{ secrets.DB_USERNAME }} >> .env
         echo DB_PASSWORD=${{ secrets.DB_PASSWORD }} >> .env
         echo DB_NAME=mohh2db >> .env
+        echo WII_PAL_DB_PORT=5432 >> .env
+        echo WII_NTSC_DB_PORT=5433 >> .env
+        echo PSP_PAL_DB_PORT=5434 >> .env
+        echo PSP_NTSC_DB_PORT=5435 >> .env
         echo TCP_HOST_IP=${{ secrets.SERVER_IP }} >> .env
         echo UDP_HOST_IP=127.0.0.1 >> .env
-        echo WII_PAL_PROFILES=wii-pal >> .env
-        echo WII_PAL_LOGS=/var/log/mohh2/wii/pal >> .env
 
     - name: Generate dnsmasq.conf
       run: |
         cat << EOF > dns-server/dnsmasq.conf
         address=/wiimoh08.ea.com/${{ secrets.SERVER_IP }}
         address=/pspmoh08.ea.com/${{ secrets.SERVER_IP }}
+        address=/tos.ea.com/${{ secrets.SERVER_IP }}
         address=/naswii.nintendowifi.net/${{ secrets.SERVER_IP }}
         EOF
 
